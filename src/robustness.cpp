@@ -3,7 +3,7 @@ using namespace benchmark;
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
-        fputs("Usage:\n  accuracy <groundtruth> <input>", stderr);
+        fputs("Usage:\n  robustness <groundtruth> <input> <fix scale>", stderr);
         return EXIT_FAILURE;
     }
 

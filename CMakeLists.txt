@@ -26,5 +26,5 @@ target_link_libraries(initialization PUBLIC benchmark-dep)
 add_executable(robustness ${CMAKE_CURRENT_SOURCE_DIR}/src/robustness.cpp)
 target_link_libraries(robustness PUBLIC benchmark-dep)
 
-# add_executable(relocalization ${CMAKE_CURRENT_SOURCE_DIR}/src/relocalization.cpp)
-# target_link_libraries(relocalization PUBLIC benchmark-dep)
+add_executable(relocalization ${CMAKE_CURRENT_SOURCE_DIR}/src/relocalization.cpp)
+target_link_libraries(relocalization PUBLIC benchmark-dep)

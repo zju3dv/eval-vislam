@@ -408,8 +408,7 @@ inline std::vector<std::pair<double, double>> read_shutter(const std::string &sh
 
     FILE *shutter_file = fopen(shutter_path.c_str(), "r");
 
-    char header[1024];
-    fscanf(shutter_file, "%[^\n]\n", header);
+    fscanf(shutter_file, "%*[^\r\n]");
 
     double begin_time, end_time;
     while (!feof(shutter_file)) {
