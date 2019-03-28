@@ -28,6 +28,18 @@ int main(int argc, char* argv[]) {
 
     auto [gt_trajectory, in_trajectory] = get_synchronized_data(input_filename, vic_dataset, cam_dataset, imu_dataset);
 
+    // find global scale s_g
+    std::vector<vector<3>> gt_positions, in_positions;
+    for (size_t i = 0; i < in_trajectory.size(); ++i) {
+        if (is_valid_pose(in_trajectory[i])) {
+            gt_positions.push_back(gt_trajectory[i].p);
+            in_positions.push_back(in_trajectory[i].p);
+        }
+    }
+
+    double s_g = 1.0;
+    std::tie(s_g, std::ignore, std::ignore) = umeyama(gt_positions, in_positions, has_inertial);
+
     // find first consecutive sub-sequence
     size_t sequence_end = 0;
     while (sequence_end < in_trajectory.size() && is_valid_pose(in_trajectory[sequence_end])) {
@@ -59,7 +71,6 @@ int main(int argc, char* argv[]) {
     }
 
     double t_init = in_trajectory[convergence_point].t - in_trajectory[0].t;
-    double s_g = has_inertial ? 1.0 : scales.back();
     double r_scale = scales[convergence_point] / s_g;
     double error_scale = 0.5 * (abs(r_scale - 1) + abs(1 / r_scale - 1)) * 100;
 
