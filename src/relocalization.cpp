@@ -3,7 +3,7 @@ using namespace benchmark;
 
 int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
-        fputs("Usage:\n  initialization <groundtruth> <input> <has inertial>", stderr);
+        fputs("Usage:\n  relocalization <groundtruth> <input> <has inertial>", stderr);
         return EXIT_FAILURE;
     }
 
