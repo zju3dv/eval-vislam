@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(benchmark VERSION 0.0.1 LANGUAGES CXX)
 
 find_package(Eigen3 REQUIRED)
