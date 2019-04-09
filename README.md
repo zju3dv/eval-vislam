@@ -4,6 +4,10 @@ Toolkit for VSLAM and VISLAM evaluation.
 
 For more information, please refer to our [project website](http://www.zjucvg.net/eval-vislam/).
 
+## License
+
+This project is released under the Apache 2.0 license.
+
 ## Prerequisites
 
 - [Eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page)
@@ -57,4 +61,17 @@ Arguments:
   <groundtruth>   Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
   <input>         SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
   <has inertial>  Set to 1 for VISLAM, set to 0 for VSLAM.
+```
+
+## Citation
+
+If you are using our codebase or dataset for research, please cite the following publication:
+
+```bibtex
+@article{
+  title={Survey and Evaluation of Monocular Visual-Inertial SLAM Algorithms for Augmented Reality},
+  author={Jinyu Li, Bangbang Yang, Danpeng Chen, Nan Wang, Guofeng Zhang*, Hujun Bao*},
+  journal={Journal of Virtual Reality & Intelligent Hardware},
+  year={to appear}
+}
 ```
