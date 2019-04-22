@@ -72,6 +72,6 @@ If you are using our codebase or dataset for research, please cite the following
   title={Survey and Evaluation of Monocular Visual-Inertial SLAM Algorithms for Augmented Reality},
   author={Jinyu Li, Bangbang Yang, Danpeng Chen, Nan Wang, Guofeng Zhang*, Hujun Bao*},
   journal={Journal of Virtual Reality & Intelligent Hardware},
-  year={to appear}
+  year={2019}
 }
 ```
