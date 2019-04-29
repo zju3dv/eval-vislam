@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     }
 
     double s_g = 1.0;
-    std::tie(s_g, std::ignore, std::ignore) = umeyama(gt_positions, in_positions, has_inertial);
+    std::tie(s_g, std::ignore, std::ignore) = umeyama(gt_positions, in_positions);
 
     // find first consecutive sub-sequence
     size_t sequence_end = 0;
@@ -49,14 +49,14 @@ int main(int argc, char* argv[]) {
     // compute the scale of cumulative windows
     std::deque<double> scales;
     for (size_t j = 1; j <= sequence_end; ++j) {
-        if (j >= 3) {
+        if (j >= 5) {
             std::vector<vector<3>> gt_points, in_points;
             for (size_t i = 0; i < j; ++i) {
                 gt_points.push_back(gt_trajectory[i].p);
                 in_points.push_back(in_trajectory[i].p);
             }
             double s;
-            std::tie(s, std::ignore, std::ignore) = umeyama(gt_points, in_points);
+            std::tie(s, std::ignore, std::ignore) = umeyama(gt_points, in_points, has_inertial);
             scales.push_back(s);
         } else { // too little point and we cannot solve scale.
             scales.push_back(0);
@@ -70,11 +70,11 @@ int main(int argc, char* argv[]) {
         if (r > 0.2) break;
     }
 
-    double t_init = in_trajectory[convergence_point].t - in_trajectory[0].t;
+    double t_init = std::max(in_trajectory[convergence_point].t - vic_dataset.data.items[0].t - 5, 0.0);
     double r_scale = scales[convergence_point] / s_g;
-    double error_scale = 0.5 * (abs(r_scale - 1) + abs(1 / r_scale - 1)) * 100;
+    double error_scale = 0.5 * (abs(r_scale - 1) + abs(1 / r_scale - 1));
 
-    double init_quality = t_init * sqrt(error_scale + 1);
+    double init_quality = t_init * sqrt(error_scale + 0.01);
 
     printf("T_init:  %.3f [s]\nE_scale: %f\nE_init:  %f\n", t_init, error_scale, init_quality);
 
