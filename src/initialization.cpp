@@ -2,6 +2,11 @@
 #include "benchmark.h"
 using namespace benchmark;
 
+namespace {
+double window_size = 5.0; // seconds
+double init_th = 0.03;
+} // namespace
+
 int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
         fputs("Usage:\n  initialization <groundtruth> <input> <has inertial>", stderr);
@@ -38,36 +43,56 @@ int main(int argc, char* argv[]) {
     }
 
     double s_g = 1.0;
-    std::tie(s_g, std::ignore, std::ignore) = umeyama(gt_positions, in_positions);
+    double s_g_global = 1.0;
+    std::tie(s_g, std::ignore, std::ignore) = umeyama(gt_positions, in_positions, has_inertial);
+    std::tie(s_g_global, std::ignore, std::ignore) = umeyama(gt_positions, in_positions);
 
-    // find first consecutive sub-sequence
-    size_t sequence_end = 0;
+    // find first valid consecutive sub-sequence
+    size_t sequence_start = 3; // skip too little points
+    while (sequence_start < in_trajectory.size() && !is_valid_pose(in_trajectory[sequence_start])) {
+        sequence_start++;
+    }
+    size_t sequence_end = sequence_start;
     while (sequence_end < in_trajectory.size() && is_valid_pose(in_trajectory[sequence_end])) {
         sequence_end++;
     }
-
     // compute the scale of cumulative windows
-    std::deque<double> scales;
+    std::deque<double> scales; // scale and timestamp
     for (size_t j = 1; j <= sequence_end; ++j) {
-        if (j >= 5) {
+        if (j >= sequence_start) {
             std::vector<vector<3>> gt_points, in_points;
             for (size_t i = 0; i < j; ++i) {
                 gt_points.push_back(gt_trajectory[i].p);
                 in_points.push_back(in_trajectory[i].p);
             }
             double s;
-            std::tie(s, std::ignore, std::ignore) = umeyama(gt_points, in_points, has_inertial);
+            std::tie(s, std::ignore, std::ignore) = umeyama(gt_points, in_points);
             scales.push_back(s);
-        } else { // too little point and we cannot solve scale.
-            scales.push_back(0);
+            if (gt_trajectory[j].t - gt_trajectory[0].t < 0) continue;
+        } else {
+            scales.push_back(-1);
         }
     }
 
     // find convergence point
     size_t convergence_point;
-    for (convergence_point = sequence_end; convergence_point > 2; --convergence_point) {
-        double r = abs(scales[convergence_point - 1] - scales.back()) / scales.back();
-        if (r > 0.2) break;
+    std::vector<double> window_scales;
+    for (convergence_point = sequence_start; convergence_point < sequence_end; ++convergence_point) {
+        if (scales[convergence_point] < 0) continue;
+        window_scales.clear();
+        for (size_t window_end = convergence_point; window_end < sequence_end; ++window_end) {
+            if (in_trajectory[window_end].t - in_trajectory[convergence_point].t > window_size) break;
+            window_scales.push_back(scales[window_end]);
+        }
+        double s_ref = scales[convergence_point];
+        bool is_convergence = true;
+        for (const auto& s : window_scales) {
+            if (std::abs(s - s_ref) / s_ref > init_th) {
+                is_convergence = false;
+                break;
+            }
+        }
+        if (is_convergence) break;
     }
 
     double t_init = std::max(in_trajectory[convergence_point].t - vic_dataset.data.items[0].t - 5, 0.0);
