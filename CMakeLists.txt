@@ -17,6 +17,8 @@ target_sources(benchmark-dep INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/benchmark
 target_compile_features(benchmark-dep INTERFACE cxx_std_17)
 target_link_libraries(benchmark-dep INTERFACE eigen3-dep yaml-cpp-dep)
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
 add_executable(accuracy ${CMAKE_CURRENT_SOURCE_DIR}/src/accuracy.cpp)
 target_link_libraries(accuracy PUBLIC benchmark-dep)
 

@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <string>
 #include <fstream>
+#include <algorithm>
 #include <Eigen/Eigen>
 #include <yaml-cpp/yaml.h>
 
@@ -397,6 +398,9 @@ inline bool is_valid_pose(const PoseData &pose) {
     if (abs(pose.q.norm() - 1.0) > 1.0e-3) {
         return false;
     }
+    if (pose.p.x() == 0 && pose.p.y() == 0 && pose.p.z() == 0) {
+        return false;
+    }
     if (pose.p.x() == 0 && pose.p.y() == 0 && pose.p.z() == 0 && pose.q.x() == 0 && pose.q.y() == 0 && pose.q.z() == 0 && pose.q.w() == 1) {
         return false;
     }
@@ -430,11 +434,13 @@ inline std::vector<std::pair<double, double>> read_shutter(const std::string &sh
     return shutter_data;
 }
 
-inline PoseData sample_pose(const std::vector<PoseData> &poses, double t) {
+inline PoseData sample_pose(const std::vector<PoseData> &poses, double t, double *sample_t_diff = nullptr) {
     if (t <= poses.front().t) {
+        if (sample_t_diff) *sample_t_diff = std::abs(t - poses.front().t);
         return poses.front();
     }
     if (t >= poses.back().t) {
+        if (sample_t_diff) *sample_t_diff = std::abs(t - poses.back().t);
         return poses.back();
     }
 
@@ -450,6 +456,7 @@ inline PoseData sample_pose(const std::vector<PoseData> &poses, double t) {
         }
     }
 
+    if (sample_t_diff) *sample_t_diff = std::max(std::abs(t - poses[l].t), std::abs(t - poses[r].t));
     if (l == r) {
         return poses[l];
     }
@@ -572,22 +579,25 @@ inline std::vector<PoseData> read_tum_input(const std::string &tum_path, const C
     return tum_data;
 }
 
-inline std::vector<PoseData> sample_groundtruth(const ViconDataset &vicon_dataset, const std::vector<PoseData> &in_poses, const ImuYaml &imu_yaml) {
+inline std::pair<std::vector<PoseData>, std::vector<PoseData>> sample_groundtruth(const ViconDataset &vicon_dataset, const std::vector<PoseData> &in_poses, const ImuYaml &imu_yaml) {
     const quaternion &q_bi = imu_yaml.extrinsic.q;
     const vector<3> &p_bi = imu_yaml.extrinsic.p;
     const quaternion &q_bv = vicon_dataset.sensor.extrinsic.q;
     const vector<3> &p_bv = vicon_dataset.sensor.extrinsic.p;
 
-    std::vector<PoseData> groundtruth_trajectory;
+    std::vector<PoseData> aligned_in_trajectory, groundtruth_trajectory;
     for (const PoseData &in_pose : in_poses) {
-        PoseData pose = sample_pose(vicon_dataset.data.items, in_pose.t);
+        double sample_t_diff;
+        PoseData pose = sample_pose(vicon_dataset.data.items, in_pose.t, &sample_t_diff);
+        if (sample_t_diff > 0.1) continue;
         PoseData gt_pose;
         gt_pose.t = pose.t + vicon_dataset.sensor.extrinsic.t;
         gt_pose.q = pose.q * q_bv.conjugate() * q_bi;
         gt_pose.p = pose.p + pose.q * q_bv.conjugate() * (p_bi - p_bv);
         groundtruth_trajectory.emplace_back(gt_pose);
+        aligned_in_trajectory.emplace_back(in_pose);
     }
-    return groundtruth_trajectory;
+    return {aligned_in_trajectory, groundtruth_trajectory};
 }
 
 inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_data(const std::string &input_filename, const ViconDataset &gt_dataset, const CameraDataset &cam_dataset, const ImuDataset &imu_dataset) {
@@ -628,8 +638,8 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_
         exit(EXIT_FAILURE);
     }
 
-    std::vector<PoseData> gt_trajectory = sample_groundtruth(gt_dataset, in_trajectory, imu_dataset.sensor);
-    return std::make_pair(gt_trajectory, in_trajectory);
+    auto [sync_in_trajectory, gt_trajectory] = sample_groundtruth(gt_dataset, in_trajectory, imu_dataset.sensor);
+    return std::make_pair(gt_trajectory, sync_in_trajectory);
 }
 
 } // namespace benchmark
