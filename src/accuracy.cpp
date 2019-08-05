@@ -25,7 +25,8 @@ int main(int argc, char* argv[]) {
     imu_dataset.load(dataset_root + "/imu");
     vic_dataset.load(dataset_root + "/groundtruth"); // gt has same format to vicon
 
-    auto [gt_trajectory, in_trajectory] = get_synchronized_data(input_filename, vic_dataset, cam_dataset, imu_dataset);
+    size_t in_trajectory_raw_valid_size;
+    auto [gt_trajectory, in_trajectory] = get_synchronized_data(input_filename, vic_dataset, cam_dataset, imu_dataset, &in_trajectory_raw_valid_size);
 
     // solve S R T
     std::vector<vector<3>> gt_positions, in_positions;
@@ -79,17 +80,25 @@ int main(int argc, char* argv[]) {
     RRE = sqrt(RRE / Rcount) * 180 / M_PI;
 
     // evaluate completeness
-    // here we used an assumption: input is having fixed frame rate
-    double Ccount = 0;
+    // here we used an assumption: input is no more than camera frame rate
+    double BadCount = 0;
     for (size_t i = 0; i < in_trajectory.size(); ++i) {
         if (is_valid_pose(in_trajectory[i])) {
             vector<3> p_error = in_trajectory[i].p - gt_trajectory[i].p;
-            if (p_error.norm() <= 0.1) {
-                Ccount++;
+            if (p_error.norm() > 0.1) {
+                BadCount++;
             }
+        } else {
+            BadCount++;
         }
     }
-    double CMPL = Ccount / in_trajectory.size();
+
+    size_t slam_start_frame = 0;
+    for (; slam_start_frame < cam_dataset.data.items.size(); ++slam_start_frame) {
+        if (cam_dataset.data.items[slam_start_frame].t >= in_trajectory[0].t) break;
+    }
+
+    double CMPL = std::min(1.0, (in_trajectory_raw_valid_size - BadCount) / (cam_dataset.data.items.size() - slam_start_frame));
 
     printf("Scale: %.3f%%\nAPE:   %.3f [mm]\nRPE:   %.3f [mm]\nARE:   %.3f [deg]\nRRE:   %.3f [deg]\nCMPL:  %.3f%%\n", s * 1e2, APE, RPE, ARE, RRE, CMPL * 1e2);
 

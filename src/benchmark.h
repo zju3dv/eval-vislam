@@ -600,7 +600,7 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> sample_groundtrut
     return {aligned_in_trajectory, groundtruth_trajectory};
 }
 
-inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_data(const std::string &input_filename, const ViconDataset &gt_dataset, const CameraDataset &cam_dataset, const ImuDataset &imu_dataset) {
+inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_data(const std::string &input_filename, const ViconDataset &gt_dataset, const CameraDataset &cam_dataset, const ImuDataset &imu_dataset, size_t *in_trajectory_raw_valid_size = nullptr) {
     if (gt_dataset.data.items.size() == 0) {
         fputs("Groundtruth is empty.", stderr);
         exit(EXIT_FAILURE);
@@ -620,6 +620,7 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_
     while (in_trajectory.size() > 0 && !is_valid_pose(in_trajectory.front())) {
         in_trajectory.erase(in_trajectory.begin());
     }
+    if (in_trajectory_raw_valid_size) *in_trajectory_raw_valid_size = in_trajectory.size();
 
     if (in_trajectory.size() == 0) {
         fputs("Input is empty.", stderr);
