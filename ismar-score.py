@@ -39,9 +39,10 @@ def select_round(total_round, gt_folder, traj_folder):
     return ape_list.index(np.percentile(ape_list, 50, interpolation='nearest'))
 
 
-# e.g. python3 --round 5 --is_vislam 1 --trajectory_base_dir /path/to/your/trajectory --gt_base_dir /path/to/your/dataset/folder
+# e.g. python3 ismar-score.py --round 5 --is_vislam 1 --trajectory_base_dir /path/to/your/trajectory --gt_base_dir /path/to/your/dataset/folder
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ISMAR2019 SLAM Challenge Scoring')
+    parser = argparse.ArgumentParser(
+        description='ISMAR2019 SLAM Challenge Scoring')
     parser.add_argument('--round', type=str)
     parser.add_argument('--is_vislam', type=str)
     parser.add_argument('--trajectory_base_dir', type=str)
@@ -54,11 +55,11 @@ if __name__ == '__main__':
     fix_scale = '1' if is_vislam == True else '0'
     method = 'VISLAM' if is_vislam == True else 'VSLAM'
 
-    accuracy_cmpl_init_eval_list = ['C0_test', 'C1_test', 'C2_test', 'C3_test', 'C4_test', 'C5_test',
-                                    'C6_test', 'C7_test', 'C8_test', 'C9_test', 'C10_test', 'C11_test', 'D8_test', 'D9_test', 'D10_test']
-    robustness_eval_list = ['D0_test', 'D1_test',
-                            'D2_test', 'D3_test', 'D4_test']
-    reloc_time_eval_list = ['D5_test', 'D6_test', 'D7_test']
+    accuracy_cmpl_init_eval_list = ['C0_train', 'C1_train', 'C2_train', 'C3_train', 'C4_train', 'C5_train',
+                                    'C6_train', 'C7_train', 'C8_train', 'C9_train', 'C10_train', 'C11_train', 'D8_train', 'D9_train', 'D10_train']
+    robustness_eval_list = ['D0_train', 'D1_train',
+                            'D2_train', 'D3_train', 'D4_train']
+    reloc_time_eval_list = ['D5_train', 'D6_train', 'D7_train']
     full_list = list(set(accuracy_cmpl_init_eval_list +
                          robustness_eval_list + reloc_time_eval_list))
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
         round = select_round(total_round, gt_folder,
                              trajectory_base_dir + '/' + seq_name)
         traj_file = trajectory_base_dir + '/' + \
-            seq_name + '/' + str(round) + '.txt'
+            seq_name + '/' + str(round) + '-pose.txt'
         if seq_name in accuracy_cmpl_init_eval_list:
             text_result = subprocess.check_output(
                 ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
@@ -96,7 +97,11 @@ if __name__ == '__main__':
                 ['bin/relocalization', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
             score_list['Relocalization Time'].append(
                 get_score(text_result, method, 'Relocalization Time'))
-    print("Final Score : ")
+    single_scores = {}
     for critera, score in score_list.items():
         avg = sum(score) / len(score)
+        single_scores[critera] = avg
         print(critera, ' : %.4f' % avg)
+    complete_score = (single_scores['APE'] + single_scores['ARE'] + single_scores['RPE'] * 0.5 + single_scores['RRE'] * 0.5 +
+                      single_scores['Badness'] + single_scores['InitQuality'] + single_scores['Robustness'] + single_scores['Relocalization Time']) / 6
+    print('Final Score : %.4f' % complete_score)

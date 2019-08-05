@@ -13,6 +13,19 @@ This project is released under the Apache 2.0 license.
 - [Eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
+## ISMAR 2019 SLAM Challenge Scoring ToolKit
+
+```docopt
+Usage:
+  python3 ismar-score.py --round <round> --is_vislam <is_vislam> --trajectory_base_dir <trajectory_base_dir> --gt_base_dir <gt_base_dir>
+
+Arguments:
+  <round>                    SLAM benchmark number of rounds, e.g. 5.
+  <is_vislam>                Set to 1 for VISLAM, set to 0 for VSLAM.
+  <trajectory_base_dir>      SLAM camera trajectory file folders(e.g. ~/MY-SLAM/trajectories/). We support TUM format(timestamp[s] px py pz qx qy qz qw) files.
+  <gt_base_dir>              Path to groundtruth folder, e.g. ~/ISMAR-Dataset/train.
+```
+
 ## Toolkit Usage
 
 ### Accuracy (APE, RPE, ARE, RRE, Completeness)
