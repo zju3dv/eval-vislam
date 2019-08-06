@@ -82,11 +82,14 @@ If you are using our codebase or dataset for research, please cite the following
 
 ```bibtex
 @article{
-  title={Survey and Evaluation of Monocular Visual-Inertial SLAM Algorithms for Augmented Reality},
-  author={Jinyu Li, Bangbang Yang, Danpeng Chen, Nan Wang, Guofeng Zhang*, Hujun Bao*},
-  journal={Journal of Virtual Reality & Intelligent Hardware},
-  year={2019},
-  url = {http://www.vr-ih.com/vrih/html/EN/10.3724/SP.J.2096-5796.2018.0011/article.html},
-  doi = {10.3724/SP.J.2096-5796.2018.0011}
+  title   = {Survey and Evaluation of Monocular Visual-Inertial SLAM Algorithms for Augmented Reality},
+  author  = {Jinyu Li, Bangbang Yang, Danpeng Chen, Nan Wang, Guofeng Zhang*, Hujun Bao*},
+  journal = {Journal of Virtual Reality & Intelligent Hardware},
+  year    = {2019},
+  volume  = {1},
+  number  = {4},
+  pages   = {386-410},
+  url     = {http://www.vr-ih.com/vrih/html/EN/10.3724/SP.J.2096-5796.2018.0011/article.html},
+  doi     = {10.3724/SP.J.2096-5796.2018.0011}
 }
 ```
