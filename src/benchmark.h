@@ -643,6 +643,10 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_
     return std::make_pair(gt_trajectory, sync_in_trajectory);
 }
 
+inline double compute_score(const double &val, const double &sigma) {
+    return (sigma * sigma) / (sigma * sigma + val * val);
+}
+
 } // namespace benchmark
 
 #endif // BENCHMARK_DATASET_H

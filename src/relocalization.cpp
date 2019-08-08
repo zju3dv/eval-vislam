@@ -3,19 +3,15 @@ using namespace benchmark;
 
 int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
-        fputs("Usage:\n  relocalization <groundtruth> <input> <has inertial>", stderr);
+        fputs("Usage:\n  relocalization <groundtruth> <input> <has inertial> <jump detection>", stderr);
         return EXIT_FAILURE;
     }
 
     std::string dataset_root(argv[1]);
     std::string input_filename(argv[2]);
-    bool has_inertial = false;
+    const bool has_inertial = (std::atoi(argv[3]) != 0);
 
-    if (argc == 3) {
-        has_inertial = false;
-    } else {
-        has_inertial = (std::atoi(argv[3]) != 0);
-    }
+    const double jump_detection = (argc == 5) ? (std::atoi(argv[4])) : 0.05;
 
     CameraDataset cam_dataset;
     ImuDataset imu_dataset;
@@ -39,7 +35,7 @@ int main(int argc, char* argv[]) {
 
     } else {
         for (size_t j = 1; j < in_trajectory.size(); ++j) {
-            if ((in_trajectory[j].p - in_trajectory[j - 1].p).norm() > 0.05) {
+            if ((in_trajectory[j].p - in_trajectory[j - 1].p).norm() > jump_detection) {
                 recover_edges.push_back(in_trajectory[j].t);
             }
         }
@@ -58,7 +54,10 @@ int main(int argc, char* argv[]) {
         }
     }
     average_recover_time /= std::max(average_recover_count, 1.0);
-    printf("Relocalization Time: %.3f [s]", average_recover_time);
+
+    const double sigma_reloc = has_inertial ? 1.42 : 0.65;
+
+    printf("Relocalization Time: %.3f [s] Score %.4f\n", average_recover_time, compute_score(average_recover_time, sigma_reloc));
 
     return 0;
 }

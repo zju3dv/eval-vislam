@@ -100,7 +100,19 @@ int main(int argc, char* argv[]) {
 
     double CMPL = std::min(1.0, (in_trajectory_raw_valid_size - BadCount) / (cam_dataset.data.items.size() - slam_start_frame));
 
-    printf("Scale: %.3f%%\nAPE:   %.3f [mm]\nRPE:   %.3f [mm]\nARE:   %.3f [deg]\nRRE:   %.3f [deg]\nCMPL:  %.3f%%\n", s * 1e2, APE, RPE, ARE, RRE, CMPL * 1e2);
+    const double sigma_APE = fix_scale ? 55.83 : 72.46;
+    const double sigma_ARE = fix_scale ? 2.48 : 7.41;
+    const double sigma_RPE = fix_scale ? 2.92 : 6.72;
+    const double sigma_RRE = fix_scale ? 0.17 : 0.26;
+    const double sigma_BAD = fix_scale ? 2.38 : 20.68;
+
+    printf("Scale: %.3f%%\n"
+           "APE:   %.3f [mm]   Score   %.4f\n"
+           "RPE:   %.3f [mm]   Score   %.4f\n"
+           "ARE:   %.3f [deg]  Score   %.4f\n"
+           "RRE:   %.3f [deg]  Score   %.4f\n"
+           "CMPL:  %.3f%%      Score   %.4f\n",
+           s * 1e2, APE, compute_score(APE, sigma_APE), RPE, compute_score(RPE, sigma_RPE), ARE, compute_score(ARE, sigma_ARE), RRE, compute_score(RRE, sigma_RRE), CMPL * 1e2, compute_score(100 - CMPL * 1e2, sigma_BAD));
 
     return EXIT_SUCCESS;
 }

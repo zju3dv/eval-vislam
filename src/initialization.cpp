@@ -101,7 +101,9 @@ int main(int argc, char* argv[]) {
 
     double init_quality = t_init * sqrt(error_scale + 0.01);
 
-    printf("T_init:  %.3f [s]\nE_scale: %f\nE_init:  %f\n", t_init, error_scale, init_quality);
+    const double sigma_init = has_inertial ? 1.85 : 2.79;
+
+    printf("T_init:  %.3f [s]\nE_scale: %f\nE_init:  %f\nScore%.4f\n", t_init, error_scale, init_quality, compute_score(init_quality, sigma_init));
 
     return EXIT_SUCCESS;
 }

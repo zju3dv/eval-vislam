@@ -96,11 +96,14 @@ int main(int argc, char *argv[]) {
 
     double robustness = (lost_ratio + 5) / 100.0 * (relocalization_error + 0.1 * ape);
 
-    printf("lost ratio:  %.3f%%\nreloc error: %.3f\nAPE:         %.3f [mm]\nrobustness:  %.3f\n",
+    const double sigma_robustness = fix_scale ? 0.95 : 2.27;
+
+    printf("lost ratio:  %.3f%%\nreloc error: %.3f\nAPE:         %.3f [mm]\nrobustness:  %.3f\nScore:      %.4f\n",
            lost_ratio,
            relocalization_error,
            ape,
-           robustness);
+           robustness,
+           compute_score(robustness, sigma_robustness));
 
     return EXIT_SUCCESS;
 }

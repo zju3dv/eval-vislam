@@ -35,9 +35,9 @@ Usage:
   ./accuracy <groundtruth> <input> <fix scale>
 
 Arguments:
-  <groundtruth>   Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
-  <input>         SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
-  <fix scale>     Set to 1 for VISLAM, set to 0 for VSLAM.
+  <groundtruth>    Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
+  <input>          SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
+  <fix scale>      Set to 1 for VISLAM, set to 0 for VSLAM.
 ```
 
 ### Initialization Scale Error and Time
@@ -47,9 +47,9 @@ Usage:
   ./initialization <groundtruth> <input> <has inertial>
 
 Arguments:
-  <groundtruth>   Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
-  <input>         SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
-  <has inertial>  Set to 1 for VISLAM, set to 0 for VSLAM.
+  <groundtruth>    Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
+  <input>          SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
+  <has inertial>   Set to 1 for VISLAM, set to 0 for VSLAM.
 ```
 
 ### Robustness
@@ -59,21 +59,22 @@ Usage:
   ./robustness <groundtruth> <input> <fix scale>
 
 Arguments:
-  <groundtruth>   Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
-  <input>         SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
-  <fix scale>     Set to 1 for VISLAM, set to 0 for VSLAM.
+  <groundtruth>    Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
+  <input>          SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
+  <fix scale>      Set to 1 for VISLAM, set to 0 for VSLAM.
 ```
 
 ### Relocalization Time
 
 ```docopt
 Usage:
-  relocalization <groundtruth> <input> <has inertial>
+  relocalization <groundtruth> <input> <has inertial> <jump detection>
 
 Arguments:
-  <groundtruth>   Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
-  <input>         SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
-  <has inertial>  Set to 1 for VISLAM, set to 0 for VSLAM.
+  <groundtruth>    Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
+  <input>          SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
+  <has inertial>   Set to 1 for VISLAM, set to 0 for VSLAM.
+  <jump detection> Sensitivity to detect jump when relocalization happened (Default 0.05).
 ```
 
 ## Citation
