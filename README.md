@@ -10,6 +10,7 @@ This project is released under the Apache 2.0 license.
 
 ## Prerequisites
 
+- **A modern compiler, i.e., at least gcc 7.1 on Linux.**
 - [Eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
