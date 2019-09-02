@@ -17,7 +17,7 @@ def get_value(res_str, key):
         return 0
 
 
-def get_score(res_str, method, key):
+def get_score(res_str, method, key, verbose=True):
     raw_value = 0
     if key == 'Badness':
         raw_value = 100 - get_value(res_str, 'CMPL')
@@ -26,16 +26,19 @@ def get_score(res_str, method, key):
     else:
         raw_value = get_value(res_str, key)
     sigma = sigma_dict[method][key]
-    return (sigma * sigma) / (sigma * sigma + raw_value * raw_value)
+    score = (sigma * sigma) / (sigma * sigma + raw_value * raw_value)
+    if verbose:
+        print('---->', key, ': %.3f' % raw_value, ', Score :', "%.4f" % score)
+    return score
 
 
 def select_round(total_round, gt_folder, traj_folder):
     ape_list = []
     for i in range(total_round):
-        traj_file = traj_folder + '/' + str(i) + '.txt'
+        traj_file = traj_folder + '/' + str(i) + '-pose.txt'
         text_result = subprocess.check_output(
             ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
-        ape_list.append(get_score(text_result, method, 'APE'))
+        ape_list.append(get_score(text_result, method, 'APE', False))
     return ape_list.index(np.percentile(ape_list, 50, interpolation='nearest'))
 
 
@@ -62,21 +65,25 @@ if __name__ == '__main__':
     reloc_time_eval_list = ['D5_train', 'D6_train', 'D7_train']
     full_list = list(set(accuracy_cmpl_init_eval_list +
                          robustness_eval_list + reloc_time_eval_list))
+    full_list.sort()
 
     score_list = {'APE': [], 'RPE': [], 'ARE': [], 'RRE': [], 'Badness': [
     ], 'InitQuality': [], 'Robustness': [], 'Relocalization Time': []}
 
     for seq_name in full_list:
+        print('------------------------------')
+        has_static_segment = '1' if (seq_name.find('A') != -1 or seq_name.find('C') != -1) else '0'
         gt_folder = gt_base_dir + '/' + seq_name
         round = select_round(total_round, gt_folder,
                              trajectory_base_dir + '/' + seq_name)
+        print('Sequence Name', seq_name, ', Select Round', round)
         traj_file = trajectory_base_dir + '/' + \
             seq_name + '/' + str(round) + '-pose.txt'
         if seq_name in accuracy_cmpl_init_eval_list:
             text_result = subprocess.check_output(
                 ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
             text_result += subprocess.check_output(
-                ['bin/initialization', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
+                ['bin/initialization', gt_folder, traj_file, fix_scale, has_static_segment]).decode(sys.stdout.encoding)
             score_list['APE'].append(get_score(text_result, method, 'APE'))
             score_list['RPE'].append(get_score(text_result, method, 'RPE'))
             score_list['ARE'].append(get_score(text_result, method, 'ARE'))
@@ -98,6 +105,8 @@ if __name__ == '__main__':
             score_list['Relocalization Time'].append(
                 get_score(text_result, method, 'Relocalization Time'))
     single_scores = {}
+    print('------------------------------')
+    print('----------Summary-------------')
     for critera, score in score_list.items():
         avg = sum(score) / len(score)
         single_scores[critera] = avg

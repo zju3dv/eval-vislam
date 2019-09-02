@@ -45,12 +45,13 @@ Arguments:
 
 ```docopt
 Usage:
-  ./initialization <groundtruth> <input> <has inertial>
+  ./initialization <groundtruth> <input> <has inertial> <has static segment>
 
 Arguments:
-  <groundtruth>    Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
-  <input>          SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
-  <has inertial>   Set to 1 for VISLAM, set to 0 for VSLAM.
+  <groundtruth>         Path to sequence folder, e.g. ~/VISLAM-Dataset/A0.
+  <input>               SLAM camera trajectory file in TUM format(timestamp[s] px py pz qx qy qz qw).
+  <has inertial>        Set to 1 for VISLAM, set to 0 for VSLAM.
+  <has static segment>  Set to 1 if sequence has static segment at the beginning (e.g. Ax and Cx series).
 ```
 
 ### Robustness

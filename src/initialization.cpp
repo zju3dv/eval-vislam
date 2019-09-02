@@ -8,20 +8,15 @@ double init_th = 0.03;
 } // namespace
 
 int main(int argc, char* argv[]) {
-    if (argc < 3 || argc > 4) {
-        fputs("Usage:\n  initialization <groundtruth> <input> <has inertial>", stderr);
+    if (argc != 5) {
+        fputs("Usage:\n  initialization <groundtruth> <input> <has inertial> <has static segment>", stderr);
         return EXIT_FAILURE;
     }
 
     std::string dataset_root(argv[1]);
     std::string input_filename(argv[2]);
-    bool has_inertial = false;
-
-    if (argc == 3) {
-        has_inertial = false;
-    } else {
-        has_inertial = (std::atoi(argv[3]) != 0);
-    }
+    bool has_inertial = (std::atoi(argv[3]) != 0);
+    bool has_static_segment = (std::atoi(argv[4]) != 0);
 
     CameraDataset cam_dataset;
     ImuDataset imu_dataset;
@@ -48,14 +43,20 @@ int main(int argc, char* argv[]) {
     std::tie(s_g_global, std::ignore, std::ignore) = umeyama(gt_positions, in_positions);
 
     // find first valid consecutive sub-sequence
-    size_t sequence_start = 3; // skip too little points
-    while (sequence_start < in_trajectory.size() && !is_valid_pose(in_trajectory[sequence_start])) {
-        sequence_start++;
+    size_t sequence_start, sequence_end;
+    sequence_start = sequence_end = 3; // skip too little points
+    // at least 10 frames sub-sequence
+    while (sequence_end - sequence_start < 10) {
+        sequence_start = sequence_end;
+        while (sequence_start < in_trajectory.size() && !is_valid_pose(in_trajectory[sequence_start])) {
+            sequence_start++;
+        }
+        sequence_end = sequence_start;
+        while (sequence_end < in_trajectory.size() && is_valid_pose(in_trajectory[sequence_end])) {
+            sequence_end++;
+        }
     }
-    size_t sequence_end = sequence_start;
-    while (sequence_end < in_trajectory.size() && is_valid_pose(in_trajectory[sequence_end])) {
-        sequence_end++;
-    }
+
     // compute the scale of cumulative windows
     std::deque<double> scales; // scale and timestamp
     for (size_t j = 1; j <= sequence_end; ++j) {
@@ -94,8 +95,11 @@ int main(int argc, char* argv[]) {
         }
         if (is_convergence) break;
     }
-
-    double t_init = std::max(in_trajectory[convergence_point].t - vic_dataset.data.items[0].t - 5, 0.0);
+    double static_start_length = 0;
+    if (has_static_segment) {
+        static_start_length = 5.0;
+    }
+    double t_init = std::max(in_trajectory[convergence_point].t - vic_dataset.data.items[0].t - static_start_length, 0.0);
     double r_scale = scales[convergence_point] / s_g;
     double error_scale = 0.5 * (abs(r_scale - 1) + abs(1 / r_scale - 1));
 
