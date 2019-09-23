@@ -13,8 +13,8 @@ def get_value(res_str, key):
     try:
         return float(re.search(r'' + key + reg_float, res_str).group(1))
     except:
-        print('Error in get_value', res_str, key)
-        return 0
+        print('Error in get_value', key, '\nOutput : ', res_str)
+        return -1
 
 
 def get_score(res_str, method, key, verbose=True):
@@ -27,8 +27,10 @@ def get_score(res_str, method, key, verbose=True):
         raw_value = get_value(res_str, key)
     sigma = sigma_dict[method][key]
     score = (sigma * sigma) / (sigma * sigma + raw_value * raw_value)
+    if raw_value < 0:
+        score = 0
     if verbose:
-        print('---->', key, ': %.3f' % raw_value, ', Score :', "%.4f" % score)
+        print('---->', key, ': %.3f' % (raw_value) if raw_value >= 0 else ': invalid', ', Score :', "%.4f" % score)
     return score
 
 
@@ -36,10 +38,37 @@ def select_round(total_round, gt_folder, traj_folder):
     ape_list = []
     for i in range(total_round):
         traj_file = traj_folder + '/' + str(i) + '-pose.txt'
-        text_result = subprocess.check_output(
-            ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
-        ape_list.append(get_score(text_result, method, 'APE', False))
+        try:
+            text_result = subprocess.check_output(
+                ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
+            ape_list.append(get_score(text_result, method, 'APE', False))
+        except Exception:
+            print('\nFail to run: ', 'bin/accuracy', gt_folder, traj_file, fix_scale)
+            return -1
     return ape_list.index(np.percentile(ape_list, 50, interpolation='nearest'))
+
+
+def handle_invalid_sequence(accuracy_cmpl_init_eval_list, robustness_eval_list, reloc_time_eval_list, seq_name, score_list):
+        if seq_name in accuracy_cmpl_init_eval_list:
+            score_list['APE'].append(0)
+            score_list['RPE'].append(0)
+            score_list['ARE'].append(0)
+            score_list['RRE'].append(0)
+            score_list['Badness'].append(0)
+            score_list['InitQuality'].append(0)
+            print('---->', 'APE invalid, Score : 0')
+            print('---->', 'RPE invalid, Score : 0')
+            print('---->', 'ARE invalid, Score : 0')
+            print('---->', 'RRE invalid, Score : 0')
+            print('---->', 'Badness invalid, Score : 0')
+            print('---->', 'InitQuality invalid, Score : 0')
+        if seq_name in robustness_eval_list:
+            score_list['Robustness'].append(0)
+            print('---->', 'Robustness invalid, Score : 0')
+        if seq_name in reloc_time_eval_list:
+            score_list['Relocalization Time'].append(0)
+            print('---->', 'Relocalization Time invalid, Score : 0')
+        return score_list
 
 
 # e.g. python3 ismar-score.py --round 5 --is_vislam 1 --trajectory_base_dir /path/to/your/trajectory --gt_base_dir /path/to/your/dataset/folder
@@ -76,9 +105,14 @@ if __name__ == '__main__':
         gt_folder = gt_base_dir + '/' + seq_name
         round = select_round(total_round, gt_folder,
                              trajectory_base_dir + '/' + seq_name)
-        print('Sequence Name', seq_name, ', Select Round', round)
+        print('Sequence Name', seq_name, ', Select Round', round if round >= 0 else 'invalid')
+        # invalid round detected
+        if round < 0:
+            score_list = handle_invalid_sequence(accuracy_cmpl_init_eval_list, robustness_eval_list, reloc_time_eval_list, seq_name, score_list)
+            continue
         traj_file = trajectory_base_dir + '/' + \
             seq_name + '/' + str(round) + '-pose.txt'
+        # accuracy, completeness, init quality
         if seq_name in accuracy_cmpl_init_eval_list:
             text_result = subprocess.check_output(
                 ['bin/accuracy', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
@@ -92,13 +126,13 @@ if __name__ == '__main__':
                 get_score(text_result, method, 'Badness'))
             score_list['InitQuality'].append(
                 get_score(text_result, method, 'InitQuality'))
-
+        # robustness
         if seq_name in robustness_eval_list:
             text_result = subprocess.check_output(
                 ['bin/robustness', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
             score_list['Robustness'].append(
                 get_score(text_result, method, 'robustness'))
-
+        # relocalization time
         if seq_name in reloc_time_eval_list:
             text_result = subprocess.check_output(
                 ['bin/relocalization', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
@@ -110,7 +144,7 @@ if __name__ == '__main__':
     for critera, score in score_list.items():
         avg = sum(score) / len(score)
         single_scores[critera] = avg
-        print(critera, ' : %.4f' % avg)
+        print(critera, ' : %.4f' % (avg) if avg >= 0 else ' : invalid')
     complete_score = (single_scores['APE'] + single_scores['ARE'] + single_scores['RPE'] * 0.5 + single_scores['RRE'] * 0.5 +
                       single_scores['Badness'] + single_scores['InitQuality'] + single_scores['Robustness'] + single_scores['Relocalization Time']) / 6
     print('Final Score : %.4f' % complete_score)

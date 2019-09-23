@@ -556,6 +556,10 @@ inline std::vector<PoseData> read_tum_input(const std::string &tum_path, const C
     const vector<3> &p_bc = camera_yaml.extrinsic.p;
 
     FILE *tum_file = fopen(tum_path.c_str(), "r");
+    if (!tum_file) {
+        fprintf(stderr, "Cannot open trajectory file : %s.\n", tum_path.c_str());
+        exit(-1);
+    }
 
     while (!feof(tum_file)) {
         PoseData data;

@@ -91,7 +91,9 @@ int main(int argc, char *argv[]) {
         if (std::isnan(s_diff)) continue; // not enough poses for umeyama
         vector<3> q_diff = logmap(std::get<1>(Si).conjugate() * std::get<1>(Sj));
         vector<3> t_diff = std::get<2>(Si) - std::get<2>(Sj);
-        relocalization_error += sqrt(s_diff * s_diff + q_diff.squaredNorm() + t_diff.squaredNorm());
+        double local_reloc_err = sqrt(s_diff * s_diff + q_diff.squaredNorm() + t_diff.squaredNorm());
+        if (std::isnan(local_reloc_err)) continue;
+        relocalization_error += local_reloc_err;
     }
 
     double robustness = (lost_ratio + 5) / 100.0 * (relocalization_error + 0.1 * ape);
