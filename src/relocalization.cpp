@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     std::string input_filename(argv[2]);
     const bool has_inertial = (std::atoi(argv[3]) != 0);
 
-    const double jump_detection = (argc == 5) ? (std::atoi(argv[4])) : 0.05;
+    const double jump_detection = (argc == 5) ? (std::atof(argv[4])) : 0.05;
 
     CameraDataset cam_dataset;
     ImuDataset imu_dataset;

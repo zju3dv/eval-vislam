@@ -79,10 +79,12 @@ if __name__ == '__main__':
     parser.add_argument('--is_vislam', type=str)
     parser.add_argument('--trajectory_base_dir', type=str)
     parser.add_argument('--gt_base_dir', type=str)
+    parser.add_argument('--time_ratio', type=str, default='1.0')
     args = parser.parse_args()
     trajectory_base_dir = args.trajectory_base_dir
     gt_base_dir = args.gt_base_dir
     total_round = int(args.round)
+    time_ratio = args.time_ratio
     is_vislam = True if args.is_vislam == '1' else '0'
     fix_scale = '1' if is_vislam == True else '0'
     method = 'VISLAM' if is_vislam == True else 'VSLAM'
@@ -92,6 +94,12 @@ if __name__ == '__main__':
     robustness_eval_list = ['D0_train', 'D1_train',
                             'D2_train', 'D3_train', 'D4_train']
     reloc_time_eval_list = ['D5_train', 'D6_train', 'D7_train']
+
+    # test-round1
+    accuracy_cmpl_init_eval_list = ['C1_test', 'C3_test', 'C5_test', 'C7_test', 'C9_test', 'C11_test', 'D8_test', 'D10_test']
+    robustness_eval_list = ['D0_test', 'D3_test', 'D4_test']
+    reloc_time_eval_list = ['D6_test']
+
     full_list = list(set(accuracy_cmpl_init_eval_list +
                          robustness_eval_list + reloc_time_eval_list))
     full_list.sort()
@@ -112,6 +120,8 @@ if __name__ == '__main__':
             continue
         traj_file = trajectory_base_dir + '/' + \
             seq_name + '/' + str(round) + '-pose.txt'
+        time_file = trajectory_base_dir + '/' + \
+            seq_name + '/' + str(round) + '-time.txt'
         # accuracy, completeness, init quality
         if seq_name in accuracy_cmpl_init_eval_list:
             text_result = subprocess.check_output(
@@ -135,7 +145,7 @@ if __name__ == '__main__':
         # relocalization time
         if seq_name in reloc_time_eval_list:
             text_result = subprocess.check_output(
-                ['bin/relocalization', gt_folder, traj_file, fix_scale]).decode(sys.stdout.encoding)
+                ['bin/relocalization_runtime', gt_folder, traj_file, time_file, fix_scale, '0.05', time_ratio]).decode(sys.stdout.encoding)
             score_list['Relocalization Time'].append(
                 get_score(text_result, method, 'Relocalization Time'))
     single_scores = {}

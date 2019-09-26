@@ -30,6 +30,11 @@ struct PoseData {
     vector<3> p;
 };
 
+struct RunTimeData {
+    double t;
+    double duration;
+};
+
 struct ImuData {
     double t;
     vector<3> w;
@@ -583,6 +588,35 @@ inline std::vector<PoseData> read_tum_input(const std::string &tum_path, const C
     return tum_data;
 }
 
+inline std::vector<RunTimeData> read_run_time(const std::string &time_path) {
+    std::vector<RunTimeData> run_time_data;
+
+    FILE *time_file = fopen(time_path.c_str(), "r");
+    if (!time_file) {
+        fprintf(stderr, "Cannot open time file : %s.\n", time_path.c_str());
+        exit(-1);
+    }
+    double last_time = -1;
+    while (!feof(time_file)) {
+        RunTimeData data;
+        if (fscanf(time_file, "%lf %lf\n", &data.t, &data.duration) == 0) {
+            break;
+        }
+        if (last_time < 0) {
+            last_time = data.duration;
+        } else {
+            double current_time = data.duration;
+            data.duration = data.duration - last_time;
+            last_time = current_time;
+            run_time_data.push_back(data);
+        }
+    }
+
+    fclose(time_file);
+
+    return run_time_data;
+}
+
 inline std::pair<std::vector<PoseData>, std::vector<PoseData>> sample_groundtruth(const ViconDataset &vicon_dataset, const std::vector<PoseData> &in_poses, const ImuYaml &imu_yaml) {
     const quaternion &q_bi = imu_yaml.extrinsic.q;
     const vector<3> &p_bi = imu_yaml.extrinsic.p;
@@ -639,12 +673,36 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_
     double overlap_time_len = overlap_time_max - overlap_time_min;
 
     if (overlap_time_len / (in_time_max - in_time_min) < 0.1) {
-        fputs("Input time range does not match groundtruth.", stderr);
+        fputs("Input time range does not match groundtruth.\n", stderr);
         exit(EXIT_FAILURE);
     }
 
     auto [sync_in_trajectory, gt_trajectory] = sample_groundtruth(gt_dataset, in_trajectory, imu_dataset.sensor);
     return std::make_pair(gt_trajectory, sync_in_trajectory);
+}
+
+inline std::vector<RunTimeData> get_synchronized_run_time_data(const std::string &time_filename, const std::vector<PoseData> &pose_data) {
+    auto run_time_data = read_run_time(time_filename);
+    std::vector<RunTimeData> sync_run_time_data;
+    for (const auto &pose : pose_data) {
+        RunTimeData d;
+        d.t = pose.t;
+        auto it = std::upper_bound(run_time_data.begin(), run_time_data.end(), d,
+                                   [](const RunTimeData &lhs, const RunTimeData &rhs) -> bool { return lhs.t < rhs.t; });
+        // first member is closest
+        if (it == run_time_data.begin()) {
+            sync_run_time_data.push_back(*it);
+        } else if (it == run_time_data.end()) {
+            sync_run_time_data.push_back(*(it - 1));
+        } else {
+            double diff1 = abs(pose.t - it->t);
+            double diff2 = abs(pose.t - (it - 1)->t);
+            if (diff2 < diff1)
+                --it;
+            sync_run_time_data.push_back(*it);
+        }
+    }
+    return sync_run_time_data;
 }
 
 inline double compute_score(const double &val, const double &sigma) {
