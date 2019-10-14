@@ -33,3 +33,6 @@ target_link_libraries(relocalization PUBLIC benchmark-dep)
 
 add_executable(relocalization_runtime ${CMAKE_CURRENT_SOURCE_DIR}/src/relocalization_runtime.cpp)
 target_link_libraries(relocalization_runtime PUBLIC benchmark-dep)
+
+add_executable(extract_time ${CMAKE_CURRENT_SOURCE_DIR}/src/extract_time.cpp)
+target_link_libraries(extract_time PUBLIC benchmark-dep)

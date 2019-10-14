@@ -100,6 +100,11 @@ if __name__ == '__main__':
     robustness_eval_list = ['D0_test', 'D3_test', 'D4_test']
     reloc_time_eval_list = ['D6_test']
 
+    # test-full
+    accuracy_cmpl_init_eval_list = ['C0_test', 'C1_test', 'C2_test', 'C3_test', 'C4_test', 'C5_test', 'C6_test', 'C7_test', 'C8_test', 'C9_test', 'C10_test', 'C11_test', 'D8_test', 'D9_test', 'D10_test']
+    robustness_eval_list = ['D0_test', 'D1_test', 'D2_test', 'D3_test', 'D4_test']
+    reloc_time_eval_list = ['D5_test', 'D6_test', 'D7_test']
+
     full_list = list(set(accuracy_cmpl_init_eval_list +
                          robustness_eval_list + reloc_time_eval_list))
     full_list.sort()

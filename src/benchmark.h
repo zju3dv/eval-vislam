@@ -588,7 +588,7 @@ inline std::vector<PoseData> read_tum_input(const std::string &tum_path, const C
     return tum_data;
 }
 
-inline std::vector<RunTimeData> read_run_time(const std::string &time_path) {
+inline std::vector<RunTimeData> read_run_time(const std::string &time_path, bool raw_running_time = false) {
     std::vector<RunTimeData> run_time_data;
 
     FILE *time_file = fopen(time_path.c_str(), "r");
@@ -601,6 +601,10 @@ inline std::vector<RunTimeData> read_run_time(const std::string &time_path) {
         RunTimeData data;
         if (fscanf(time_file, "%lf %lf\n", &data.t, &data.duration) == 0) {
             break;
+        }
+        if (raw_running_time) {
+            run_time_data.push_back(data);
+            continue;
         }
         if (last_time < 0) {
             last_time = data.duration;
@@ -673,6 +677,7 @@ inline std::pair<std::vector<PoseData>, std::vector<PoseData>> get_synchronized_
     double overlap_time_len = overlap_time_max - overlap_time_min;
 
     if (overlap_time_len / (in_time_max - in_time_min) < 0.1) {
+        fprintf(stderr, "%s\n", input_filename.c_str());
         fputs("Input time range does not match groundtruth.\n", stderr);
         exit(EXIT_FAILURE);
     }
